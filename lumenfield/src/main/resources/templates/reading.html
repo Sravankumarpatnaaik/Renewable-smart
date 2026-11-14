@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Log a reading · Lumenfield</title>
+    <link rel="icon" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/station.css">
+</head>
+<body>
+<main class="wrap">
+    <header th:replace="~{fragments :: header}"></header>
+    <section class="split">
+        <article class="panel">
+            <h2>Log a sensor hour</h2>
+            <p class="hint">POST /api/readings accepts the same fields. The hour is stored in MySQL with JDBC. A bad value is refused and nothing is written.</p>
+            <p class="note" th:if="${saved != null}">
+                Saved <span th:text="${saved.source().asset}">array</span>
+                at <span th:text="${#temporals.format(saved.recordedAt(), 'd MMM HH:mm')}">time</span>,
+                <span th:text="${saved.energyKwh()}">0</span> kWh.
+            </p>
+            <form class="stack" method="post" action="/readings" th:object="${form}">
+                <p class="error" th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}">error</p>
+                <label>Source
+                    <select th:field="*{source}">
+                        <option value="SOLAR">East Array · solar</option>
+                        <option value="WIND">Ridge Turbine · wind</option>
+                    </select>
+                </label>
+                <p class="error" th:if="${#fields.hasErrors('source')}" th:errors="*{source}">source</p>
+                <label>Day
+                    <input type="date" th:field="*{day}" required>
+                </label>
+                <p class="error" th:if="${#fields.hasErrors('day')}" th:errors="*{day}">day</p>
+                <label>Hour
+                    <select th:field="*{hour}">
+                        <option th:each="h : ${#numbers.sequence(0, 23)}" th:value="${h}"
+                                th:text="${#numbers.formatInteger(h, 2)} + ':00'">00:00</option>
+                    </select>
+                </label>
+                <p class="error" th:if="${#fields.hasErrors('hour')}" th:errors="*{hour}">hour</p>
+                <label>Average power (kW)
+                    <input type="number" step="0.001" min="0" max="80" th:field="*{powerKw}" required>
+                </label>
+                <p class="error" th:if="${#fields.hasErrors('powerKw')}" th:errors="*{powerKw}">power</p>
+                <label>Energy in that hour (kWh)
+                    <input type="number" step="0.001" min="0" max="80" th:field="*{energyKwh}" required>
+                </label>
+                <p class="error" th:if="${#fields.hasErrors('energyKwh')}" th:errors="*{energyKwh}">energy</p>
+                <button type="submit">Store this hour</button>
+            </form>
+        </article>
+        <article class="panel">
+            <h2>Latest hours</h2>
+            <table>
+                <thead>
+                <tr><th>When (IST)</th><th>Source</th><th>kWh</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="row : ${recent}">
+                    <td th:text="${#temporals.format(row.recordedAt(), 'd MMM HH:mm')}">time</td>
+                    <td th:text="${row.source().asset}">asset</td>
+                    <td th:text="${#numbers.formatDecimal(row.energyKwh(), 1, 'COMMA', 1, 'POINT')}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+    </section>
+    <footer class="fine">Example body for the REST sensor: {"source":"WIND","recordedAt":"2026-11-13T18:00:00","powerKw":9.5,"energyKwh":9.5}</footer>
+</main>
+</body>
+</html>

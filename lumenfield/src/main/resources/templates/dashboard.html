@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Today · Lumenfield</title>
+    <link rel="icon" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/station.css">
+</head>
+<body>
+<main class="wrap">
+    <header th:replace="~{fragments :: header}"></header>
+    <section class="grid">
+        <article class="card">
+            <span>Today combined</span>
+            <strong th:text="${#numbers.formatDecimal(today.combinedTotal(), 1, 'COMMA', 1, 'POINT')} + ' kWh'">0</strong>
+            <em th:text="${#temporals.format(today.date(), 'd MMM yyyy')}">date</em>
+        </article>
+        <article class="card">
+            <span>East Array</span>
+            <strong th:text="${#numbers.formatDecimal(today.solarTotal(), 1, 'COMMA', 1, 'POINT')} + ' kWh'">0</strong>
+            <em>Solar, so far today</em>
+        </article>
+        <article class="card">
+            <span>Ridge Turbine</span>
+            <strong th:text="${#numbers.formatDecimal(today.windTotal(), 1, 'COMMA', 1, 'POINT')} + ' kWh'">0</strong>
+            <em>Wind, so far today</em>
+        </article>
+        <article class="card">
+            <span>Peak hour</span>
+            <strong th:text="${today.peakHour()}">12:00</strong>
+            <em th:text="${#numbers.formatDecimal(today.peakKwh(), 1, 'COMMA', 1, 'POINT')} + ' kWh combined'">0</em>
+        </article>
+    </section>
+    <section class="split">
+        <article class="panel">
+            <h2>Today, by hour</h2>
+            <p class="hint">Kilowatt-hours in each hour. Night hours on the array sit at zero. Hours still ahead are left open.</p>
+            <div class="chart-box"><canvas id="dailyChart"></canvas></div>
+        </article>
+        <article class="panel">
+            <h2>Low generation</h2>
+            <p class="hint">Hours that fell under the recent baseline. Solar is checked from 08:00 to 16:00.</p>
+            <ul class="alerts">
+                <li th:if="${#lists.isEmpty(alerts)}">No hour in the last week fell far enough under its baseline.</li>
+                <li th:each="alert : ${alerts}" th:class="${alert.severity()}">
+                    <span class="tag" th:classappend="${alert.severity()}" th:text="${alert.severity()}">low</span>
+                    <span class="tag" th:classappend="${alert.source().name().toLowerCase()}" th:text="${alert.source().asset}">asset</span>
+                    <span th:text="${#temporals.format(alert.recordedAt(), 'd MMM, HH:mm')}">time</span>
+                    <p th:text="${alert.message()}">message</p>
+                </li>
+            </ul>
+        </article>
+    </section>
+    <article class="panel">
+        <h2>Last seven days</h2>
+        <p class="hint">Daily energy. A short solar bar is a dull-sky day. Tomorrow’s moving-average estimate is <strong th:text="${#numbers.formatDecimal(tomorrow.combinedTotal(), 1, 'COMMA', 1, 'POINT')}">0</strong> kWh. <a href="/forecast">Open the forecast.</a></p>
+        <div class="chart-box"><canvas id="weekChart"></canvas></div>
+    </article>
+    <footer class="fine">Times are India Standard Time. Readings are simulated sensor hours stored in MySQL. This desk does not operate a grid.</footer>
+</main>
+<script id="daily-data" type="application/json" th:utext="${dailyJson}"></script>
+<script id="weekly-data" type="application/json" th:utext="${weeklyJson}"></script>
+<script src="/js/chart.umd.min.js"></script>
+<script src="/js/station.js"></script>
+</body>
+</html>

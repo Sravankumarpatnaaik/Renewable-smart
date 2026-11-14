@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<header class="top" th:fragment="header">
+    <a class="brand" href="/">
+        <span class="mark" aria-hidden="true"></span>
+        <span>
+            <h1>Lumenfield</h1>
+            <p>Gulf of Mannar shore · East Array 48 kW · Ridge Turbine 30 kW</p>
+        </span>
+    </a>
+    <nav>
+        <a href="/" th:classappend="${section == 'today'} ? 'active' : ''">Today</a>
+        <a href="/forecast" th:classappend="${section == 'forecast'} ? 'active' : ''">Forecast</a>
+        <a href="/readings" th:classappend="${section == 'readings'} ? 'active' : ''">Log a reading</a>
+    </nav>
+</header>
+</body>
+</html>

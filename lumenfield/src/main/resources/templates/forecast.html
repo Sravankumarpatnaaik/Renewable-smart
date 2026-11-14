@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Forecast · Lumenfield</title>
+    <link rel="icon" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/station.css">
+</head>
+<body>
+<main class="wrap">
+    <header th:replace="~{fragments :: header}"></header>
+    <section class="grid">
+        <article class="card">
+            <span>Tomorrow combined</span>
+            <strong th:text="${#numbers.formatDecimal(tomorrow.combinedTotal(), 1, 'COMMA', 1, 'POINT')} + ' kWh'">0</strong>
+            <em th:text="${#temporals.format(tomorrow.date(), 'd MMM yyyy')}">date</em>
+        </article>
+        <article class="card">
+            <span>East Array</span>
+            <strong th:text="${#numbers.formatDecimal(tomorrow.solarTotal(), 1, 'COMMA', 1, 'POINT')} + ' kWh'">0</strong>
+            <em>7-day mean by hour</em>
+        </article>
+        <article class="card">
+            <span>Ridge Turbine</span>
+            <strong th:text="${#numbers.formatDecimal(tomorrow.windTotal(), 1, 'COMMA', 1, 'POINT')} + ' kWh'">0</strong>
+            <em>7-day mean by hour</em>
+        </article>
+        <article class="card">
+            <span>Window</span>
+            <strong th:text="${tomorrow.windowDays()} + ' days'">7</strong>
+            <em>Target day is left out of its own average</em>
+        </article>
+    </section>
+    <article class="panel">
+        <h2>Next-day shape</h2>
+        <p class="hint">Each hour is the average of that same hour across the previous seven days. The estimate is made before the day begins, then compared with what the meters later recorded.</p>
+        <div class="chart-box"><canvas id="forecastChart"></canvas></div>
+    </article>
+    <article class="panel">
+        <h2>Prediction against the meters</h2>
+        <p class="hint">Combined kilowatt-hours. A negative gap means the station made less than the moving average expected.</p>
+        <div class="chart-box"><canvas id="compareChart"></canvas></div>
+        <table>
+            <thead>
+            <tr>
+                <th>Day</th>
+                <th>Predicted</th>
+                <th>Actual</th>
+                <th>Gap</th>
+                <th>Solar actual</th>
+                <th>Wind actual</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${rows}">
+                <td th:text="${#temporals.format(row.date, 'd MMM')}">day</td>
+                <td th:text="${#numbers.formatDecimal(row.predictedTotal, 1, 'COMMA', 1, 'POINT')}">0</td>
+                <td th:text="${#numbers.formatDecimal(row.actualTotal, 1, 'COMMA', 1, 'POINT')}">0</td>
+                <td th:text="${#numbers.formatDecimal(row.gap, 1, 'COMMA', 1, 'POINT')}"
+                    th:classappend="${row.gap.signum() < 0} ? 'gap-neg' : 'gap-pos'">0</td>
+                <td th:text="${#numbers.formatDecimal(row.actualSolar, 1, 'COMMA', 1, 'POINT')}">0</td>
+                <td th:text="${#numbers.formatDecimal(row.actualWind, 1, 'COMMA', 1, 'POINT')}">0</td>
+            </tr>
+            </tbody>
+        </table>
+    </article>
+    <footer class="fine">The forecast is a moving average in Java. It does not call an external model.</footer>
+</main>
+<script id="forecast-data" type="application/json" th:utext="${forecastJson}"></script>
+<script id="comparison-data" type="application/json" th:utext="${comparisonJson}"></script>
+<script src="/js/chart.umd.min.js"></script>
+<script src="/js/station.js"></script>
+</body>
+</html>
